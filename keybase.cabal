@@ -1,0 +1,23 @@
+name: keybase
+version: 0.0.1
+license: BSD3
+
+build-type:         Simple
+cabal-version:      >= 1.6
+
+Executable          keybase
+  Main-Is:          keybase.hs
+  Hs-Source-Dirs:   src
+
+  Build-Depends:
+      base
+      , text
+      , http-conduit
+      , network
+      , conduit
+      , conduit-extra
+      , http-types
+      , HTTP
+      , bytestring
+      , utf8-string
+      , aeson
