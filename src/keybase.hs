@@ -20,6 +20,7 @@ import Data.List
 import Data.Aeson
 import Data.Aeson.Types hiding ( Options, defaultOptions )
 
+import Control.Monad
 import Control.Applicative
 
 version :: String
@@ -45,36 +46,35 @@ username usernames =
 
 impera :: IO()
 impera = do
-    test <- newIORef 1 -- I'm so imperative
+    ioInit <- newIORef 1
+    let newTest testNum = do
+            x <- readIORef testNum
+            writeIORef testNum $ x + 1
+            putStrLn $ "* Test #" ++ (show x)
+        new = newTest ioInit
+        test dostuff = new >> dostuff
     
-    x <- readIORef test
-    writeIORef test $ x + 1
-    putStrLn $ "* Test #" ++ (show x)
-    
+    new
     putStrLn "getting info about Lena..."
     u <- username [ "lena" ]
-    putStrLn "decoding JSON..."
-    let Just pu = do result <- decode (BS.pack u)
-                     flip parseMaybe result $ \obj -> do
-                         them       <- obj          .: "them"
-                         pictures   <- (them !! 0)  .: "pictures"
-                         primary    <- pictures     .: "primary"
-                         url        <- primary      .: "url"
-                         return (url :: String)
-    putStrLn $ ("Lena picture url: " ++ pu)
     
-    x <- readIORef test
-    writeIORef test $ x + 1
-    putStrLn $ "* Test #" ++ (show x)
+    test $ let Just pu = do result <- decode (BS.pack u)
+                            flip parseMaybe result $ \obj -> do
+                             them       <- obj          .: "them"
+                             pictures   <- (them !! 0)  .: "pictures"
+                             primary    <- pictures     .: "primary"
+                             url        <- primary      .: "url"
+                             return (url :: String)
+           in putStrLn $ ("Lena picture url: " ++ pu)
     
-    let Just kf = do result <- decode (BS.pack u)
-                     flip parseMaybe result $ \obj -> do
-                         them               <- obj          .: "them"
-                         public_keys        <- (them !! 0)  .: "public_keys"
-                         primary            <- public_keys  .: "primary"
-                         key_fingerprint    <- primary      .: "key_fingerprint"
-                         return (key_fingerprint :: String)
-    putStrLn $ ("Lena key_fingerprint: " ++ kf)
+    test $ let Just kf = do result <- decode (BS.pack u)
+                            flip parseMaybe result $ \obj -> do
+                             them               <- obj          .: "them"
+                             public_keys        <- (them !! 0)  .: "public_keys"
+                             primary            <- public_keys  .: "primary"
+                             key_fingerprint    <- primary      .: "key_fingerprint"
+                             return (key_fingerprint :: String)
+           in putStrLn $ ("Lena key_fingerprint: " ++ kf)
 
 defaultOptions :: Options
 defaultOptions = Options {
